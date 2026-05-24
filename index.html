@@ -1251,7 +1251,8 @@
             <div class="tcc-card">
               <div class="tcc-header">
                 <div class="tcc-av pending">?</div>
-                <div><div class="tcc-hname">À venir</div><div class="tcc-hsub">Technicien 2 — Poste à pourvoir</div></div>
+                <div><div class="tcc-hname" id="cfg-avenir-nom-display">À venir</div><div class="tcc-hsub">Technicien 2</div></div>
+                <input type="text" id="cfg-avenir-nom" placeholder="Nom du technicien" value="À venir" style="margin-top:6px;width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:12px;padding:6px 10px;outline:none;" oninput="this.previousElementSibling.querySelector('.tcc-hname').textContent=this.value;saveConfig()">
               </div>
               <div class="tcc-body">
                 <div class="tcc-row"><span class="tcc-lbl">Salaire brut annuel</span><div class="tcc-right"><input type="number" class="tcc-num" id="cfg-avenir-salaire" value="50000" min="20000" max="200000" step="500" oninput="saveConfig()"><span class="tcc-unit">€/an</span></div></div>
@@ -1558,7 +1559,8 @@ function buildSimulatorHTML(ns) {
   h +=     "<div class=\"select-wrap\" style=\"margin-bottom:10px;\">";
   h +=       "<select id=\"" + n + "-technicien\" onchange=\"onTechChange(&apos;" + n + "&apos;)\">";
   h +=         "<option value=\"cisley\">Technicien 1 &mdash; Cisley TONI</option>";
-  h +=         "<option value=\"avenir\">Technicien 2 &mdash; &Agrave; venir</option>";
+  var avenirMeta = getTechMeta().avenir;
+  h +=         "<option value=\"avenir\">Technicien 2 &mdash; " + avenirMeta.nom + "</option>";
   h +=       "</select></div>";
   h +=     "<div class=\"tech-card\">";
   h +=       "<div class=\"tech-avatar\" id=\"" + n + "-tech-avatar\">CT</div>";
@@ -1774,6 +1776,8 @@ function loadConfig() {
   set('cfg-avenir-peages',  a.peages  ?? 1800);
   set('cfg-avenir-kman',    a.kman    ?? 60000);
   set('cfg-avenir-base',    a.base    ?? 'Angers, 49000');
+  set('cfg-avenir-nom',     a.nom     ?? 'À venir');
+  if ($('cfg-avenir-nom-display')) $('cfg-avenir-nom-display').textContent = a.nom ?? 'À venir';
   refreshCfgIK();
 }
 
@@ -1873,7 +1877,7 @@ function saveConfig() {
     },
     tech: {
       cisley: { salaire:vn('cfg-cisley-salaire'), leasing:vn('cfg-cisley-leasing'), peages:vn('cfg-cisley-peages'), kman:vn('cfg-cisley-kman'), base:$('cfg-cisley-base') ? $('cfg-cisley-base').value.trim() : '49 chemin vert, Limonest, 69760' },
-      avenir: { salaire:vn('cfg-avenir-salaire'), leasing:vn('cfg-avenir-leasing'), peages:vn('cfg-avenir-peages'), kman:vn('cfg-avenir-kman'), base:$('cfg-avenir-base') ? $('cfg-avenir-base').value.trim() : 'Angers, 49000' }
+      avenir: { nom: $('cfg-avenir-nom') ? $('cfg-avenir-nom').value.trim() : 'À venir', salaire:vn('cfg-avenir-salaire'), leasing:vn('cfg-avenir-leasing'), peages:vn('cfg-avenir-peages'), kman:vn('cfg-avenir-kman'), base:$('cfg-avenir-base') ? $('cfg-avenir-base').value.trim() : 'Angers, 49000' }
     }
   };
   localStorage.setItem('laser-calc-cfg', JSON.stringify(cfg));
@@ -2329,6 +2333,15 @@ function refreshCfgIK() {
 // ══════════════════════════════════════════════
 //  DONNÉES TECHNICIEN
 // ══════════════════════════════════════════════
+function getTechMeta() {
+  var cfg = getCfg();
+  var avenirNom = (cfg.tech && cfg.tech.avenir && cfg.tech.avenir.nom) ? cfg.tech.avenir.nom : 'À venir';
+  var initiales = avenirNom !== 'À venir' ? avenirNom.split(' ').map(function(w){ return w[0]||''; }).join('').substring(0,2).toUpperCase() : '?';
+  return {
+    cisley: { nom:'Cisley TONI', initiales:'CT', role:'Technicien installation', pending:false },
+    avenir: { nom:avenirNom, initiales:initiales, role:'Technicien', pending:avenirNom==='À venir' }
+  };
+}
 const TECH_META = {
   cisley: { nom:'Cisley TONI',  initiales:'CT', role:'Technicien installation', pending:false },
   avenir: { nom:'À venir',      initiales:'?',  role:'Poste à pourvoir',        pending:true  }
@@ -2382,7 +2395,7 @@ function validateMaint(ns) {
 function onTechChange(ns) {
   if (!$(`${ns}-technicien`)) return;
   const key  = $(`${ns}-technicien`).value;
-  const meta = TECH_META[key];
+  const meta = getTechMeta()[key] || TECH_META[key];
   $(`${ns}-tech-name`).textContent  = meta.nom;
   $(`${ns}-tech-role`).textContent  = meta.role;
   const av = $(`${ns}-tech-avatar`);
