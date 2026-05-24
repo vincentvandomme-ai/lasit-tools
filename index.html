@@ -1600,11 +1600,14 @@ function buildSimulatorHTML(ns) {
   h +=       "<span class=\"fru\">nuit(s)</span></div></div></div></div>";
 
   h += "<div class=\"synthese\" id=\"" + n + "-synthese\">";
-  h +=   "<div class=\"synthese-title\">Synth&egrave;se du d&eacute;placement</div>";
+  h +=   "<div class=\"synthese-title\" style=\"display:flex;justify-content:space-between;align-items:center;\">";
+  h +=     "<span>Synth&egrave;se du d&eacute;placement</span>";
+  h +=     "<button onclick=\"resetSynthese(&apos;" + n + "&apos;)\" title=\"Remettre en automatique\" style=\"background:var(--bg3);border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:3px 8px;cursor:pointer;font-size:11px;font-family:DM Mono,monospace;transition:all .15s;\" onmouseover=\"this.style.color='var(--accent)';this.style.borderColor='var(--accent)'\" onmouseout=\"this.style.color='var(--text3)';this.style.borderColor='var(--border2)'\">↺ Auto</button>";
+  h +=   "</div>";
   h +=   "<div class=\"synthese-grid\">";
-  h +=     "<div class=\"synthese-item\"><div class=\"synthese-num\" id=\"" + n + "-s-jours\">&ndash;</div><div class=\"synthese-lbl\">jours factur&eacute;s<br>install + trajet</div></div>";
-  h +=     "<div class=\"synthese-item\"><div class=\"synthese-num\" id=\"" + n + "-s-nuits\">&ndash;</div><div class=\"synthese-lbl\">nuit(s)<br>d&apos;h&ocirc;tel</div></div>";
-  h +=     "<div class=\"synthese-item\"><div class=\"synthese-num\" id=\"" + n + "-s-km\">&ndash;</div><div class=\"synthese-lbl\">km<br>aller-retour</div></div>";
+  h +=     "<div class=\"synthese-item\"><input type=\"number\" class=\"synthese-num\" id=\"" + n + "-s-jours\" min=\"0\" max=\"30\" step=\"0.5\" style=\"width:80px;background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--accent);font-size:28px;font-weight:700;font-family:DM Mono,monospace;text-align:center;outline:none;\" oninput=\"onSyntheseManual(&apos;" + n + "&apos;,'jours')\" value=\"0\"><div class=\"synthese-lbl\">jours factur&eacute;s<br>install + trajet</div></div>";
+  h +=     "<div class=\"synthese-item\"><input type=\"number\" class=\"synthese-num\" id=\"" + n + "-s-nuits\" min=\"0\" max=\"30\" step=\"1\" style=\"width:80px;background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--accent);font-size:28px;font-weight:700;font-family:DM Mono,monospace;text-align:center;outline:none;\" oninput=\"onSyntheseManual(&apos;" + n + "&apos;,'nuits')\" value=\"0\"><div class=\"synthese-lbl\">nuit(s)<br>d&apos;h&ocirc;tel</div></div>";
+  h +=     "<div class=\"synthese-item\"><input type=\"number\" class=\"synthese-num\" id=\"" + n + "-s-km\" min=\"0\" max=\"5000\" step=\"10\" style=\"width:80px;background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--accent);font-size:28px;font-weight:700;font-family:DM Mono,monospace;text-align:center;outline:none;\" oninput=\"onSyntheseManual(&apos;" + n + "&apos;,'km')\" value=\"0\"><div class=\"synthese-lbl\">km<br>aller-retour</div></div>";
   h +=   "</div></div>";
 
   h += "<div class=\"section\">";
@@ -2438,6 +2441,19 @@ function onTechChange(ns) {
 //  NUITÉES & TRAJET
 // ══════════════════════════════════════════════
 const nuitsManuelles = { install:false, maint:false };
+const syntheseManuelle = { install:{}, maint:{} }; // { jours, nuits, km } when overridden
+
+function onSyntheseManual(ns, field) {
+  syntheseManuelle[ns] = syntheseManuelle[ns] || {};
+  syntheseManuelle[ns][field] = true;
+  calcPage(ns);
+}
+
+function resetSynthese(ns) {
+  syntheseManuelle[ns] = {};
+  nuitsManuelles[ns] = false;
+  calcPage(ns);
+}
 
 function getSeuilNuit()   { return vn('cfg-seuil')        || 350; }
 function getSeuilTrajet() { return vn('cfg-seuil-trajet') || 200; }
@@ -2522,10 +2538,16 @@ function calcPage(ns) {
   const joursTrajet = calcJoursTrajet(dist);
   const joursTotal  = duree + joursTrajet;
 
-  const transport = dist * ik;
-  const hotel     = nuits * (vn('cfg-hotel') || 80);
-  const repas     = calcRepas(dist, duree, nuits);
-  const mo        = coutJour * joursTotal;
+  // Synthèse — utiliser les valeurs manuelles si saisies
+  const sm = syntheseManuelle[ns] || {};
+  const effDist  = sm.km    ? (parseFloat($(`${ns}-s-km`).value)    || dist)      : dist;
+  const effNuits = sm.nuits ? (parseFloat($(`${ns}-s-nuits`).value) || nuits)     : nuits;
+  const effJours = sm.jours ? (parseFloat($(`${ns}-s-jours`).value) || joursTotal): joursTotal;
+
+  const transport = effDist  * ik;
+  const hotel     = effNuits * (vn('cfg-hotel') || 80);
+  const repas     = calcRepas(effDist, duree, effNuits);
+  const mo        = coutJour * effJours;
   const sousTotal = mo + transport + hotel + repas.total;
 
   const cfg = getCfg();
@@ -2540,21 +2562,21 @@ function calcPage(ns) {
   $(`${ns}-row-repas`).style.display = hasRepas ? 'flex' : 'none';
 
   // Synthèse
-  if (dist > 0) {
+  if (dist > 0 || effDist > 0) {
     $(`${ns}-synthese`).style.display = 'block';
-    $(`${ns}-s-jours`).textContent = joursTotal%1===0 ? joursTotal : joursTotal.toFixed(1);
-    $(`${ns}-s-nuits`).textContent = nuits;
-    $(`${ns}-s-km`).textContent    = Math.round(dist);
+    if (!sm.jours) $(`${ns}-s-jours`).value = joursTotal%1===0 ? joursTotal : joursTotal.toFixed(1);
+    if (!sm.nuits) $(`${ns}-s-nuits`).value = nuits;
+    if (!sm.km)    $(`${ns}-s-km`).value    = Math.round(dist);
   } else {
     $(`${ns}-synthese`).style.display = 'none';
   }
 
   $(`${ns}-lb-duree`).textContent    = duree%1===0 ? duree : duree.toFixed(1);
   $(`${ns}-lb-trajet`).textContent   = joursTrajet;
-  $(`${ns}-lb-km`).textContent       = Math.round(dist);
+  $(`${ns}-lb-km`).textContent       = Math.round(effDist);
   $(`${ns}-lb-mo`).textContent       = fmtE(mo);
   $(`${ns}-lb-transport`).textContent = fmtE(transport);
-  $(`${ns}-lb-nuits`).textContent    = nuits;
+  $(`${ns}-lb-nuits`).textContent    = effNuits;
   $(`${ns}-lb-hotel`).textContent    = fmtE(hotel);
   if (hasRepas) {
     $(`${ns}-lb-repas-desc`).textContent = repas.desc;
