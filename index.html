@@ -606,7 +606,7 @@
             <div class="select-wrap">
               <select id="proj-technicien" onchange="onProjTechChange()">
                 <option value="cisley">Cisley TONI</option>
-                <option value="avenir">À venir</option>
+                <option value="avenir" id="proj-tech-avenir-option">À venir</option>
               </select>
             </div>
           </div>
@@ -1778,6 +1778,9 @@ function loadConfig() {
   set('cfg-avenir-base',    a.base    ?? 'Angers, 49000');
   set('cfg-avenir-nom',     a.nom     ?? 'À venir');
   if ($('cfg-avenir-nom-display')) $('cfg-avenir-nom-display').textContent = a.nom ?? 'À venir';
+  // Mettre à jour les listes déroulantes
+  var avenirLabel = a.nom ?? 'À venir';
+  if ($('proj-tech-avenir-option')) $('proj-tech-avenir-option').textContent = avenirLabel;
   refreshCfgIK();
 }
 
