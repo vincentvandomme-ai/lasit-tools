@@ -1817,7 +1817,6 @@ async function loadConfigFromJson() {
   try {
     var response = await fetch('./config.json?v='+Date.now());
     if (!response.ok) {
-      // Pas de config.json — utiliser les valeurs par défaut
       window.APP_CFG = getDefaultConfig();
       return;
     }
@@ -1828,9 +1827,10 @@ async function loadConfigFromJson() {
     }
     window.APP_CFG = remoteConfig;
   } catch(e) {
-    // Erreur réseau — utiliser les valeurs par défaut
     window.APP_CFG = getDefaultConfig();
   }
+  // Fallback de sécurité — ne devrait jamais arriver
+  if (!window.APP_CFG) window.APP_CFG = getDefaultConfig();
 }
 
 function getDefaultConfig() {
@@ -2673,6 +2673,7 @@ $('proj-adresse') && $('proj-adresse').addEventListener('keydown', e => { if(e.k
 
 // Charger la config distante (config.json) puis initialiser
 loadConfigFromJson().then(function(){
+  if (!window.APP_CFG) window.APP_CFG = getDefaultConfig();
   loadConfig();
   initAppLock();
   if ($('proj-machine')) $('proj-machine').value = '';
@@ -2682,6 +2683,7 @@ loadConfigFromJson().then(function(){
   initFunnel();
   initLeads();
 }).catch(function(){
+  if (!window.APP_CFG) window.APP_CFG = getDefaultConfig();
   loadConfig();
   initAppLock();
   if ($('proj-machine')) $('proj-machine').value = '';
