@@ -1591,7 +1591,7 @@ function buildSimulatorHTML(ns) {
   h +=   "<div class=\"card\">";
   h +=     "<div id=\"wrap-" + n + "-duree\" class=\"field-row\" style=\"padding-top:0;\">";
   h +=       "<div><div class=\"frl\">Dur&eacute;e d&apos;intervention</div><div class=\"frh\">Jours de travail chez le client</div></div>";
-  h +=       "<div class=\"frr\"><input type=\"number\" class=\"inline-num\" id=\"" + n + "-duree\" value=\"\" placeholder=\"0\" min=\"0\" max=\"10\" step=\"0.5\" oninput=\"recalcNuits(&apos;" + n + "&apos;);validateMaint(&apos;" + n + "&apos;)\">";
+  h +=       "<div class=\"frr\"><input type=\"number\" class=\"inline-num\" id=\"" + n + "-duree\" value=\"\" placeholder=\"0\" min=\"0\" max=\"10\" step=\"1\" oninput=\"recalcNuits(&apos;" + n + "&apos;);validateMaint(&apos;" + n + "&apos;)\">";
   h +=       "<span class=\"fru\">jour(s)</span></div></div>";
   h +=   "</div></div></div>";
 
@@ -1603,7 +1603,7 @@ function buildSimulatorHTML(ns) {
 
   // MO row — jours éditables
   h +=     "<div class=\"total-row\"><span class=\"trl\">Main d&apos;&oelig;uvre &mdash; "
-  +          "<input type=\"number\" id=\"" + n + "-s-jours\" value=\"0\" min=\"0\" max=\"30\" step=\"0.5\" style=\"width:40px;background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--accent);font-family:DM Mono,monospace;font-size:13px;text-align:center;outline:none;\" oninput=\"onSyntheseManual(&apos;" + n + "&apos;,'jours')\">"
+  +          "<input type=\"number\" id=\"" + n + "-s-jours\" value=\"0\" min=\"0\" max=\"30\" step=\"1\" style=\"width:40px;background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--accent);font-family:DM Mono,monospace;font-size:13px;text-align:center;outline:none;\" oninput=\"onSyntheseManual(&apos;" + n + "&apos;,'jours')\">"
   +          " j"
   +          " <button onclick=\"resetSyntheseField(&apos;" + n + "&apos;,'jours')\" title=\"Auto\" style=\"background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:0 2px;\">↺</button>"
   +          " <span id=\"" + n + "-auto-jours\" style=\"font-size:10px;color:var(--text3);font-family:DM Mono,monospace;\"></span>"
@@ -2686,8 +2686,7 @@ async function calculerDistance(ns) {
 // ══════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════
-// Injecter le HTML des simulateurs
-$('main-maint').innerHTML = buildSimulatorHTML('maint');
+// Injecter le HTML des simulateurs — déplacé dans loadConfigFromJson().then()
 // Fix origin label to show first tech's base
 if ($('maint-origin-label')) {
   var firstBase = getTechBase('cisley');
@@ -2706,6 +2705,7 @@ $('proj-adresse') && $('proj-adresse').addEventListener('keydown', e => { if(e.k
 // Charger la config distante (config.json) puis initialiser
 loadConfigFromJson().then(function(){
   if (!window.APP_CFG) window.APP_CFG = getDefaultConfig();
+  $('main-maint').innerHTML = buildSimulatorHTML('maint');
   loadConfig();
   initAppLock();
   if ($('proj-machine')) $('proj-machine').value = '';
@@ -2716,6 +2716,7 @@ loadConfigFromJson().then(function(){
   initLeads();
 }).catch(function(){
   if (!window.APP_CFG) window.APP_CFG = getDefaultConfig();
+  $('main-maint').innerHTML = buildSimulatorHTML('maint');
   loadConfig();
   initAppLock();
   if ($('proj-machine')) $('proj-machine').value = '';
