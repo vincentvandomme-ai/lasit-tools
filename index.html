@@ -707,14 +707,17 @@
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-          <button onclick="adjustRemise(-1)" style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;line-height:1;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">−</button>
+          <button onclick="adjustRemise(-1)" id="btn-remise-minus" style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;line-height:1;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">−</button>
           <div style="text-align:center;">
-            <input type="number" id="prix-remise" value="0" min="0" max="99" step="1" oninput="calcProjet()" style="width:80px;font-size:32px;font-weight:700;font-family:DM Mono,monospace;color:var(--accent);background:transparent;border:none;outline:none;text-align:center;padding:0;">
-            <div style="font-size:13px;color:var(--text2);font-family:DM Mono,monospace;margin-top:-4px;">%</div>
+            <div style="display:flex;align-items:baseline;justify-content:center;gap:2px;">
+              <input type="number" id="prix-remise" value="0" min="0" max="99" step="1" oninput="calcProjet()" style="width:80px;font-size:32px;font-weight:700;font-family:DM Mono,monospace;color:var(--accent);background:transparent;border:none;outline:none;text-align:center;padding:0;">
+              <span style="font-size:32px;font-weight:700;font-family:DM Mono,monospace;color:var(--accent);line-height:1;">%</span>
+            </div>
           </div>
-          <button onclick="adjustRemise(1)" style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;line-height:1;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">+</button>
+          <button onclick="adjustRemise(1)" id="btn-remise-plus" style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;line-height:1;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">+</button>
         </div>
       </div>
+      <div id="remise-lock-msg" style="display:none;margin-top:10px;padding:10px 16px;background:rgba(244,63,94,.08);border:1px solid rgba(244,63,94,.25);border-radius:var(--radius);font-size:12px;color:var(--red);font-family:DM Mono,monospace;display:none;">&#9888; Valeur machine au dessus de 55 000 € — Voir avec Vincent pour l'offre de prix à proposer au client</div>
     </div>
 
     <!-- ── 05 RÉSULTAT ────────────────────────── -->
@@ -2049,6 +2052,7 @@ async function calculerDistanceProjet() {
 }
 
 function calcProjet() {
+  updateRemiseLock();
   var techKey  = $('proj-technicien') ? $('proj-technicien').value : 'cisley';
   var td       = getTechData(techKey);
   var ik       = getIK(techKey);
@@ -2159,8 +2163,28 @@ function copyText(blockId, labelId) {
   });
 }
 
+function updateRemiseLock() {
+  var liste    = vn('prix-liste');
+  var el       = $('prix-remise');
+  var lockMsg  = $('remise-lock-msg');
+  var btnMinus = $('btn-remise-minus');
+  var btnPlus  = $('btn-remise-plus');
+  if (liste > 55000) {
+    if (el) { el.value = '0'; el.disabled = true; }
+    if (btnMinus) { btnMinus.disabled = true; btnMinus.style.opacity = '0.3'; }
+    if (btnPlus)  { btnPlus.disabled  = true; btnPlus.style.opacity  = '0.3'; }
+    if (lockMsg)  lockMsg.style.display = 'block';
+  } else {
+    if (el) el.disabled = false;
+    if (btnMinus) { btnMinus.disabled = false; btnMinus.style.opacity = '1'; }
+    if (btnPlus)  { btnPlus.disabled  = false; btnPlus.style.opacity  = '1'; }
+    if (lockMsg)  lockMsg.style.display = 'none';
+  }
+}
+
 function adjustRemise(delta) {
   var el = $('prix-remise');
+  if (!el || el.disabled) return;
   var val = Math.min(99, Math.max(0, (parseFloat(el.value) || 0) + delta));
   el.value = val;
   calcProjet();
