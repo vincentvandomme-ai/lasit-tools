@@ -1,0 +1,50 @@
+{
+  "_v": 5,
+  "pin": "3007",
+  "appPassword": "Solferino5!",
+  "prixCarb": 2,
+  "seuil": 350,
+  "seuilTrajet": 200,
+  "hotel": 95,
+  "margeInstall": 15,
+  "margeMaintenance": 35,
+  "seuilInterdit": 20,
+  "seuilReduite": 26,
+  "seuilOk": 35,
+  "remiseHQ": 40,
+  "objectifAnnuel": 1800000,
+  "commerciaux": {
+    "1": "Vincent VANDOMME",
+    "2": "Jean AVENAS",
+    "3": "Aurélie GUYOT",
+    "4": "Commercial 4",
+    "5": "Commercial 5"
+  },
+  "pdj": 15,
+  "dej": 20,
+  "diner": 30,
+  "ship": {
+    "micromark": 1200,
+    "towermark": 1400,
+    "towermark-lx": 1600,
+    "compactmark": 1800,
+    "powermark": 1200,
+    "custom": 1200
+  },
+  "tech": {
+    "cisley": {
+      "salaire": 50000,
+      "leasing": 882,
+      "peages": 1800,
+      "kman": 60000,
+      "base": "49 chemin vert, Limonest, 69760"
+    },
+    "avenir": {
+      "salaire": 50000,
+      "leasing": 750,
+      "peages": 1800,
+      "kman": 60000,
+      "base": "Angers, 49000"
+    }
+  }
+}
