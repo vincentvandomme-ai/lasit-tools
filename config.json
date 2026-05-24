@@ -26,8 +26,8 @@
   "ship": {
     "micromark": 1200,
     "towermark": 1400,
-    "towermark-lx": 1600,
-    "compactmark": 1800,
+    "towermark-lx": 1800,
+    "compactmark": 2200,
     "powermark": 1200,
     "custom": 1200
   },
