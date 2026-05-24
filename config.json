@@ -39,12 +39,13 @@
       "kman": 60000,
       "base": "49 chemin vert, Limonest, 69760"
     },
-    "jeremy": {
-      "salaire": 62000,
+    "avenir": {
+      "nom": "Jeremy",
+      "salaire": 50000,
       "leasing": 750,
       "peages": 1800,
       "kman": 60000,
-      "base": "Sacé, 53470"
+      "base": "Angers, 49000"
     }
   }
 }
