@@ -499,7 +499,7 @@
     </div>
 
     <div style="text-align:center;margin-top:48px;font-size:11px;color:var(--text3);font-family:DM Mono,monospace;line-height:1.8;">
-      LASIT LASER France · Sales Tools v2.0
+      LASIT LASER France
     </div>
   </main>
 </div>
@@ -1482,7 +1482,7 @@
   </main>
 </div>
 
-<footer>LASIT LASER France &nbsp;·&nbsp; <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);">v1.0 · 2026-05-24 14:39</span></footer>
+<footer>LASIT LASER France &nbsp;·&nbsp; <span id="footer-version" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);">v1.2</span></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -2437,6 +2437,7 @@ function onTechChange(ns) {
   const base = getTechBase(key);
   $(`${ns}-origin-label`).textContent = `Départ : ${base}`;
   nuitsManuelles[ns] = false;
+  syntheseManuelle[ns] = {};
 
   // Si une adresse est déjà saisie, recalculer la distance depuis la nouvelle base
   const addr = $(`${ns}-adresse`) ? $(`${ns}-adresse`).value.trim() : '';
@@ -2458,15 +2459,30 @@ const syntheseManuelle = { install:{}, maint:{} }; // { jours, nuits, km } when 
 var _autoUpdate = false;
 
 function onSyntheseManual(ns, field) {
-  if (_autoUpdate) return; // Ignorer les mises à jour automatiques
+  if (_autoUpdate) return;
   syntheseManuelle[ns] = syntheseManuelle[ns] || {};
   syntheseManuelle[ns][field] = true;
+  calcPage(ns);
+}
+
+function onParamChange(ns) {
+  // Quand 01/02/03 changent, réinitialiser tous les overrides manuels de 04
+  syntheseManuelle[ns] = {};
   calcPage(ns);
 }
 
 function resetSyntheseField(ns, field) {
   if (syntheseManuelle[ns]) delete syntheseManuelle[ns][field];
   calcPage(ns);
+  // Forcer la mise à jour visuelle de l'input après reset
+  _autoUpdate = true;
+  const sm2 = syntheseManuelle[ns] || {};
+  if (field === 'repas' && $(`${ns}-s-repas`)) {
+    var nuits2 = calcNuitsAuto(vn(`${ns}-distance`), vn(`${ns}-duree`));
+    var repas2 = calcRepas(vn(`${ns}-distance`), vn(`${ns}-duree`), nuits2);
+    $(`${ns}-s-repas`).value = repas2.total.toFixed(0);
+  }
+  _autoUpdate = false;
 }
 
 function resetSynthese(ns) {
@@ -2479,7 +2495,7 @@ function getSeuilNuit()   { return vn('cfg-seuil')        || 350; }
 function getSeuilTrajet() { return vn('cfg-seuil-trajet') || 200; }
 
 function onDistChange(ns) { nuitsManuelles[ns]=false; calcPage(ns); }
-function recalcNuits(ns)  { nuitsManuelles[ns]=false; calcPage(ns); }
+function recalcNuits(ns)  { nuitsManuelles[ns]=false; syntheseManuelle[ns]={}; calcPage(ns); }
 function onNuitsManual(ns){ nuitsManuelles[ns]=true;  calcPage(ns); }
 
 function calcJoursTrajet(dist) {
@@ -2559,8 +2575,12 @@ function calcPage(ns) {
   const effNuits = sm.nuits ? (isNaN(_smNuits)  ? nuits     : _smNuits) : nuits;
   const effJours = sm.jours ? (isNaN(_smJours)  ? joursTotal: _smJours) : joursTotal;
 
-  const repas     = calcRepas(effDist, duree, effNuits);
-  const effRepasTotal = sm.repas ? (isNaN(_smRepas) ? repas.total : _smRepas) : repas.total;
+  // Repas auto = toujours calculé depuis les valeurs 01-02-03, pas depuis les overrides 04
+  const repas     = calcRepas(dist, duree, nuits);
+  const anyManual = sm.jours || sm.nuits || sm.km;
+  const effRepasTotal = sm.repas ? (isNaN(_smRepas) ? repas.total : _smRepas)
+                      : anyManual ? (parseFloat($(`${ns}-s-repas`) ? $(`${ns}-s-repas`).value : 0) || repas.total)
+                      : repas.total;
 
   const transport = effDist  * ik;
   const hotel     = effNuits * (vn('cfg-hotel') || 80);
@@ -2578,7 +2598,8 @@ function calcPage(ns) {
   if (!sm.jours && $(`${ns}-s-jours`)) $(`${ns}-s-jours`).value = joursTotal%1===0 ? joursTotal : joursTotal.toFixed(1);
   if (!sm.nuits && $(`${ns}-s-nuits`)) $(`${ns}-s-nuits`).value = nuits;
   if (!sm.km    && $(`${ns}-s-km`))    $(`${ns}-s-km`).value    = Math.round(dist);
-  if (!sm.repas && $(`${ns}-s-repas`)) $(`${ns}-s-repas`).value = repas.total.toFixed(0);
+  if (!sm.repas && !anyManual && $(`${ns}-s-repas`)) $(`${ns}-s-repas`).value = repas.total.toFixed(0);
+  else if (!sm.repas && anyManual && $(`${ns}-s-repas`) && !parseFloat($(`${ns}-s-repas`).value)) $(`${ns}-s-repas`).value = repas.total.toFixed(0);
   _autoUpdate = false;
 
   // Afficher les valeurs auto en référence (grisées)
@@ -2675,6 +2696,7 @@ async function calculerDistance(ns) {
     const ar = Math.round(km*2);
     $(`${ns}-distance`).value = ar;
     nuitsManuelles[ns] = false;
+    syntheseManuelle[ns] = {};
     res.className='dist-result ok';
     $(`${ns}-dist-spinner`).style.display='none';
     $(`${ns}-dist-text`).textContent=`✓  ${ar} km AR — ${Math.round(km)} km × 2 (depuis ${base.split(',')[0]})`;
@@ -4980,7 +5002,17 @@ function initFunnel() {
   if ($('funnel-import-month')) $('funnel-import-month').value = m;
 }
 
-// ── Init déplacé dans loadConfigFromJson().then() ──
+// ── Version footer ──
+var APP_VERSION = 'v1.2';
+var APP_BUILD   = '2026-05-24';
+(function(){
+  var el = document.getElementById('footer-version');
+  if (!el) return;
+  var now = new Date();
+  var hh  = String(now.getHours()).padStart(2,'0');
+  var mm  = String(now.getMinutes()).padStart(2,'0');
+  el.textContent = APP_VERSION + ' · build ' + APP_BUILD + ' · chargé ' + hh + ':' + mm;
+})();
 </script>
 </body>
 </html>
