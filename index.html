@@ -1716,70 +1716,54 @@ document.addEventListener('keydown', e => {
 // pour forcer la réinitialisation chez tous les utilisateurs
 var CFG_VERSION = 5;
 
-function getCfg() { return JSON.parse(localStorage.getItem('laser-calc-cfg') || '{}'); }
+function getCfg() { return window.APP_CFG || {}; }
 
 function loadConfig() {
-  let cfg = getCfg();
-  // Migration v4
-  if (!cfg._v || cfg._v < 4) {
-    if (cfg.tech) {
-      if (cfg.tech.cisley) { if ((cfg.tech.cisley.kman||0) <= 40000) cfg.tech.cisley.kman = 60000; cfg.tech.cisley.peages = 1800; }
-      if (cfg.tech.avenir) { if ((cfg.tech.avenir.kman||0) <= 35000) cfg.tech.avenir.kman = 60000; cfg.tech.avenir.peages = 1800; }
-    }
-    cfg._v = 4;
-    localStorage.setItem('laser-calc-cfg', JSON.stringify(cfg));
-  }
-  // Migration v5 — réinitialise la config aux nouvelles valeurs par défaut
-  if (cfg._v < CFG_VERSION) {
-    localStorage.removeItem('laser-calc-cfg');
-    cfg = {};
-  }
+  var cfg = getCfg();
   window.PIN_CODE = cfg.pin || '1234';
   if ($('cfg-app-password')) $('cfg-app-password').value = cfg.appPassword || APP_PASSWORD_DEFAULT;
   const set = (id, val) => { if ($(id)) $(id).value = val; };
-  set('cfg-prix-carb',         cfg.prixCarb         ?? 2);
-  set('cfg-seuil',             cfg.seuil            ?? 350);
-  set('cfg-seuil-trajet',      cfg.seuilTrajet      ?? 200);
-  set('cfg-hotel',             cfg.hotel            ?? 95);
-  set('cfg-marge-install',     cfg.margeInstall     ?? 15);
-  set('cfg-marge-maintenance', cfg.margeMaintenance ?? 35);
-  set('cfg-seuil-interdit',    cfg.seuilInterdit    ?? 20);
-  set('cfg-seuil-reduite',     cfg.seuilReduite     ?? 26);
-  set('cfg-seuil-ok',          cfg.seuilOk          ?? 35);
-  set('cfg-remise-hq',         cfg.remiseHQ         ?? 40);
-  set_text = function(id,v){ var el=$(id); if(el) el.value=v; };
+  set('cfg-prix-carb',         cfg.prixCarb);
+  set('cfg-seuil',             cfg.seuil);
+  set('cfg-seuil-trajet',      cfg.seuilTrajet);
+  set('cfg-hotel',             cfg.hotel);
+  set('cfg-marge-install',     cfg.margeInstall);
+  set('cfg-marge-maintenance', cfg.margeMaintenance);
+  set('cfg-seuil-interdit',    cfg.seuilInterdit);
+  set('cfg-seuil-reduite',     cfg.seuilReduite);
+  set('cfg-seuil-ok',          cfg.seuilOk);
+  set('cfg-remise-hq',         cfg.remiseHQ);
   if($('cfg-objectif')) $('cfg-objectif').value = cfg.objectifAnnuel || 1800000;
   var comms = cfg.commerciaux || {};
-  $('cfg-comm-1') && ($('cfg-comm-1').value = comms[1] ?? 'Vincent VANDOMME');
-  $('cfg-comm-2') && ($('cfg-comm-2').value = comms[2] ?? 'Jean AVENAS');
-  $('cfg-comm-3') && ($('cfg-comm-3').value = comms[3] ?? 'Aurélie GUYOT');
-  $('cfg-comm-4') && ($('cfg-comm-4').value = comms[4] ?? 'Commercial 4');
-  $('cfg-comm-5') && ($('cfg-comm-5').value = comms[5] ?? 'Commercial 5');
-  set('cfg-pdj',   cfg.pdj   ?? 15);
-  set('cfg-dej',   cfg.dej   ?? 20);
-  set('cfg-diner', cfg.diner ?? 30);
+  $('cfg-comm-1') && ($('cfg-comm-1').value = comms[1] || '');
+  $('cfg-comm-2') && ($('cfg-comm-2').value = comms[2] || '');
+  $('cfg-comm-3') && ($('cfg-comm-3').value = comms[3] || '');
+  $('cfg-comm-4') && ($('cfg-comm-4').value = comms[4] || '');
+  $('cfg-comm-5') && ($('cfg-comm-5').value = comms[5] || '');
+  set('cfg-pdj',   cfg.pdj);
+  set('cfg-dej',   cfg.dej);
+  set('cfg-diner', cfg.diner);
   const ship = cfg.ship || {};
-  set('cfg-ship-micromark',    ship.micromark    ?? 1200);
-  set('cfg-ship-towermark',    ship.towermark    ?? 1400);
-  set('cfg-ship-towermark-lx', ship['towermark-lx'] ?? 1600);
-  set('cfg-ship-compactmark',  ship.compactmark  ?? 1800);
-  set('cfg-ship-powermark',    ship.powermark    ?? 1200);
-  set('cfg-ship-custom',       ship.custom       ?? 1200);
+  set('cfg-ship-micromark',    ship.micromark);
+  set('cfg-ship-towermark',    ship.towermark);
+  set('cfg-ship-towermark-lx', ship['towermark-lx']);
+  set('cfg-ship-compactmark',  ship.compactmark);
+  set('cfg-ship-powermark',    ship.powermark);
+  set('cfg-ship-custom',       ship.custom);
   const t=cfg.tech||{}, c=t.cisley||{}, a=t.avenir||{};
-  set('cfg-cisley-salaire', c.salaire ?? 50000);
-  set('cfg-cisley-leasing', c.leasing ?? 882);
-  set('cfg-cisley-peages',  c.peages  ?? 1800);
-  set('cfg-cisley-kman',    c.kman    ?? 60000);
-  set('cfg-cisley-base',    c.base    ?? '49 chemin vert, Limonest, 69760');
-  set('cfg-avenir-salaire', a.salaire ?? 50000);
-  set('cfg-avenir-leasing', a.leasing ?? 750);
-  set('cfg-avenir-peages',  a.peages  ?? 1800);
-  set('cfg-avenir-kman',    a.kman    ?? 60000);
-  set('cfg-avenir-base',    a.base    ?? 'Angers, 49000');
-  set('cfg-avenir-nom',     a.nom     ?? 'À venir');
-  if ($('cfg-avenir-nom-display')) $('cfg-avenir-nom-display').textContent = a.nom ?? 'À venir';
-  // Mettre à jour les listes déroulantes
-  var avenirLabel = a.nom ?? 'À venir';
+  set('cfg-cisley-salaire', c.salaire);
+  set('cfg-cisley-leasing', c.leasing);
+  set('cfg-cisley-peages',  c.peages);
+  set('cfg-cisley-kman',    c.kman);
+  set('cfg-cisley-base',    c.base);
+  set('cfg-avenir-salaire', a.salaire);
+  set('cfg-avenir-leasing', a.leasing);
+  set('cfg-avenir-peages',  a.peages);
+  set('cfg-avenir-kman',    a.kman);
+  set('cfg-avenir-base',    a.base);
+  set('cfg-avenir-nom',     a.nom || 'À venir');
+  if ($('cfg-avenir-nom-display')) $('cfg-avenir-nom-display').textContent = a.nom || 'À venir';
+  var avenirLabel = a.nom || 'À venir';
   if ($('proj-tech-avenir-option')) $('proj-tech-avenir-option').textContent = avenirLabel;
   refreshCfgIK();
 }
@@ -1832,18 +1816,49 @@ function exportConfigJson() {
 async function loadConfigFromJson() {
   try {
     var response = await fetch('./config.json?v='+Date.now());
-    if (!response.ok) return; // Pas de config.json — on utilise le localStorage
+    if (!response.ok) {
+      // Pas de config.json — utiliser les valeurs par défaut
+      window.APP_CFG = getDefaultConfig();
+      return;
+    }
     var remoteConfig = await response.json();
-    if (!remoteConfig || typeof remoteConfig !== 'object') return;
-    // Fusionner la config distante dans le localStorage
-    var localConfig = getCfg();
-    // La config distante prime sur le localStorage pour tous les champs sauf le PIN
-    var pin = localConfig.pin || remoteConfig.pin || '1234';
-    var merged = Object.assign({}, localConfig, remoteConfig, {pin: pin});
-    localStorage.setItem('laser-calc-cfg', JSON.stringify(merged));
+    if (!remoteConfig || typeof remoteConfig !== 'object') {
+      window.APP_CFG = getDefaultConfig();
+      return;
+    }
+    window.APP_CFG = remoteConfig;
   } catch(e) {
-    // Pas de config.json ou erreur réseau — on continue avec le localStorage
+    // Erreur réseau — utiliser les valeurs par défaut
+    window.APP_CFG = getDefaultConfig();
   }
+}
+
+function getDefaultConfig() {
+  return {
+    _v: 5,
+    pin: '1234',
+    appPassword: 'Solferino5!',
+    prixCarb: 2,
+    seuil: 350,
+    seuilTrajet: 150,
+    hotel: 95,
+    margeInstall: 15,
+    margeMaintenance: 35,
+    seuilInterdit: 20,
+    seuilReduite: 26,
+    seuilOk: 35,
+    remiseHQ: 40,
+    pdj: 15,
+    dej: 20,
+    diner: 30,
+    objectifAnnuel: 1800000,
+    ship: { micromark:1200, towermark:1400, 'towermark-lx':1600, compactmark:1800, powermark:1200, custom:1200 },
+    tech: {
+      cisley: { nom:'Cisley TONI', salaire:50000, leasing:882,  peages:1800, kman:60000, base:'49 chemin vert, Limonest, 69760' },
+      avenir: { nom:'À venir',     salaire:50000, leasing:750,  peages:1800, kman:60000, base:'Angers, 49000' }
+    },
+    commerciaux: { 1:'Vincent VANDOMME', 2:'Jean AVENAS', 3:'Aurélie GUYOT', 4:'Commercial 4', 5:'Commercial 5' }
+  };
 }
 
 function saveConfig() {
@@ -1883,7 +1898,7 @@ function saveConfig() {
       avenir: { nom: $('cfg-avenir-nom') ? $('cfg-avenir-nom').value.trim() : 'À venir', salaire:vn('cfg-avenir-salaire'), leasing:vn('cfg-avenir-leasing'), peages:vn('cfg-avenir-peages'), kman:vn('cfg-avenir-kman'), base:$('cfg-avenir-base') ? $('cfg-avenir-base').value.trim() : 'Angers, 49000' }
     }
   };
-  localStorage.setItem('laser-calc-cfg', JSON.stringify(cfg));
+  window.APP_CFG = cfg;
   refreshCfgIK();
   calcPage('maint');
   calcShip();
@@ -2317,7 +2332,7 @@ function savePin() {
   if (!/^\d{4}$/.test(val)) { $('new-pin').style.borderColor='var(--red)'; setTimeout(()=>$('new-pin').style.borderColor='',1500); return; }
   window.PIN_CODE = val;
   const cfg = getCfg(); cfg.pin = val;
-  localStorage.setItem('laser-calc-cfg', JSON.stringify(cfg));
+  window.APP_CFG = cfg;
   $('new-pin').value=''; $('pin-saved-msg').style.display='inline';
   setTimeout(()=>$('pin-saved-msg').style.display='none', 2000);
 }

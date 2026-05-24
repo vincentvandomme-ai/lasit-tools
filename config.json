@@ -26,8 +26,8 @@
   "ship": {
     "micromark": 1200,
     "towermark": 1400,
-    "towermark-lx": 1800,
-    "compactmark": 2200,
+    "towermark-lx": 1600,
+    "compactmark": 1800,
     "powermark": 1200,
     "custom": 1200
   },
@@ -40,12 +40,12 @@
       "base": "49 chemin vert, Limonest, 69760"
     },
     "avenir": {
-      "nom": "Jeremy",
-      "salaire": 50000,
+      "nom": "Jeremy DEROUAULT",
+      "salaire": 62000,
       "leasing": 750,
       "peages": 1800,
       "kman": 60000,
-      "base": "Angers, 49000"
+      "base": "Sacé, 53470"
     }
   }
 }
