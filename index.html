@@ -2455,7 +2455,10 @@ function onTechChange(ns) {
 const nuitsManuelles = { install:false, maint:false };
 const syntheseManuelle = { install:{}, maint:{} }; // { jours, nuits, km } when overridden
 
+var _autoUpdate = false;
+
 function onSyntheseManual(ns, field) {
+  if (_autoUpdate) return; // Ignorer les mises à jour automatiques
   syntheseManuelle[ns] = syntheseManuelle[ns] || {};
   syntheseManuelle[ns][field] = true;
   calcPage(ns);
@@ -2571,10 +2574,12 @@ function calcPage(ns) {
   const total = sousTotal * (1 + margePct/100);
 
   // Mettre à jour les inputs inline si pas en mode manuel
+  _autoUpdate = true;
   if (!sm.jours && $(`${ns}-s-jours`)) $(`${ns}-s-jours`).value = joursTotal%1===0 ? joursTotal : joursTotal.toFixed(1);
   if (!sm.nuits && $(`${ns}-s-nuits`)) $(`${ns}-s-nuits`).value = nuits;
   if (!sm.km    && $(`${ns}-s-km`))    $(`${ns}-s-km`).value    = Math.round(dist);
   if (!sm.repas && $(`${ns}-s-repas`)) $(`${ns}-s-repas`).value = repas.total.toFixed(0);
+  _autoUpdate = false;
 
   // Afficher les valeurs auto en référence (grisées)
   const autoJours = joursTotal%1===0 ? joursTotal : joursTotal.toFixed(1);
