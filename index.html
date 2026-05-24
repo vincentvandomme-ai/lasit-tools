@@ -2675,14 +2675,22 @@ $('proj-adresse') && $('proj-adresse').addEventListener('keydown', e => { if(e.k
 loadConfigFromJson().then(function(){
   loadConfig();
   initAppLock();
+  if ($('proj-machine')) $('proj-machine').value = '';
+  onProjTechChange();
+  calcShip();
+  calcProjet();
+  initFunnel();
+  initLeads();
 }).catch(function(){
   loadConfig();
   initAppLock();
+  if ($('proj-machine')) $('proj-machine').value = '';
+  onProjTechChange();
+  calcShip();
+  calcProjet();
+  initFunnel();
+  initLeads();
 });
-if ($('proj-machine')) $('proj-machine').value = '';
-onProjTechChange();
-calcShip();
-calcProjet();
 validateFields();
 // ── Init appelle initFunnel après les déclarations ──
 
@@ -4933,9 +4941,7 @@ function initFunnel() {
   if ($('funnel-import-month')) $('funnel-import-month').value = m;
 }
 
-// ── Init ──
-initFunnel();
-initLeads();
+// ── Init déplacé dans loadConfigFromJson().then() ──
 </script>
 </body>
 </html>
