@@ -2181,6 +2181,8 @@ function syncMesCout() {
   if (!mesPrixManuel) {
     var margeInstall = (getCfg().margeInstall ?? 15) / 100;
     var facture = (c.mo + c.transport + c.hotel + c.repas) * (1 + margeInstall);
+    // Arrondi au 100 supérieur
+    facture = Math.ceil(facture / 100) * 100;
     var mesPrixEl = $('prix-mes');
     if (mesPrixEl) {
       mesPrixEl.value = facture.toFixed(2);
