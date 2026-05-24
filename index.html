@@ -1482,7 +1482,7 @@
   </main>
 </div>
 
-<footer>LASIT LASER France</footer>
+<footer>LASIT LASER France &nbsp;·&nbsp; <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);">v1.0 · 2026-05-24 14:39</span></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -2583,9 +2583,8 @@ function calcPage(ns) {
   if ($(`${ns}-auto-nuits`)) $(`${ns}-auto-nuits`).textContent = sm.nuits ? '(auto: '+nuits+' nuit'+(nuits>1?'s':'')+')' : '';
   if ($(`${ns}-auto-repas`)) $(`${ns}-auto-repas`).textContent = sm.repas ? '(auto: '+repas.total.toFixed(0)+' €)' : '';
 
-  const hasNuits = effNuits > 0;
   const hasRepas = effRepasTotal > 0;
-  $(`${ns}-row-hotel`).style.display = hasNuits ? 'flex' : 'none';
+  $(`${ns}-row-hotel`).style.display = 'flex';
   $(`${ns}-row-repas`).style.display = hasRepas ? 'flex' : 'none';
 
   $(`${ns}-lb-mo`).textContent        = fmtE(mo);
